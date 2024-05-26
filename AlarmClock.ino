@@ -658,11 +658,11 @@ void callAlarm() {
     unsigned long currentMillis = millis();
 
     // Check if it's time to toggle the beep state
-    if (beepState && (currentMillis - lastMillis >= 200)) { // Beep duration: 200ms
+    if (beepState && (currentMillis - lastMillis >= 200)) { // Beep duration in ms
       noTone(buzzer);
       beepState = false;
       lastMillis = currentMillis;
-    } else if (!beepState && (currentMillis - lastMillis >= 800)) { // Pause duration: 800ms
+    } else if (!beepState && (currentMillis - lastMillis >= 200)) { // Pause duration in ms
       tone(buzzer, 1000); // Emit beep sound
       beepState = true;
       lastMillis = currentMillis;
