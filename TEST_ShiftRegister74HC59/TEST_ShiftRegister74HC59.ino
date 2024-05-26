@@ -8,13 +8,9 @@
 // LCD Pins 
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
 
-// Shift Register Pins
-const int latchPin = A0; // Collegato a ST_CP del 74HC595
-const int clockPin = A1; // Collegato a SH_CP del 74HC595
-const int dataPin = A3;  // Collegato a DS del 74HC595
 
-// Crea un oggetto ShiftRegister74HC595 senza specificare il numero di registri
-ShiftRegister74HC595<1> sr(latchPin, clockPin, dataPin); // 1 registro a scorrimento
+
+
 
 
 
@@ -93,26 +89,12 @@ boolean turnItOn = false;
 boolean backlightON = true;
 bool isSettingDateTime = false; 
 
-// Funzione wrapper per impostare un pin specifico del registro a scorrimento
-void setOutput(const char* pinName, bool state) {
-    // Definiamo dei nomi custom per i pin del registro a scorrimento
-    if (strcmp(pinName, "led1") == 0) {
-        sr.set(0, state); // Imposta il primo pin del registro a scorrimento
-    } else if (strcmp(pinName, "led2") == 0) {
-        sr.set(1, state); // Imposta il secondo pin del registro a scorrimento
-    }
-    // Aggiungi altri pin custom qui, se necessario
-}
+
 
 void setup() {
   initDS3231();
   initLCD();
   initBTNs();
-    // Inizializza il registro a scorrimento
-    
-    
-    // Imposta il pin LED1 del registro a scorrimento ad HIGH
-    setOutput("led1", HIGH);
   initBuzz();
   initDTH22();
   Serial.begin(9600);
