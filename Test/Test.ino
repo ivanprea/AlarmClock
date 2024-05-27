@@ -58,6 +58,7 @@ const int btAlarmSet = 10;
 const int btSet = 11;
 const int btnNightM = 12;
 const int btAlarm = 13;
+const int btnSnooze = A1; 
 const int buzzer = 9; 
 const int isbacklight = 8; 
 const int npnBase = 8; 
@@ -130,6 +131,7 @@ void initBTNs() {
   pinMode(btnNightM, INPUT_PULLUP);
   pinMode(btAlarm, INPUT_PULLUP);
   pinMode(btAlarmSet, INPUT_PULLUP); 
+    pinMode(btnSnooze, INPUT_PULLUP);
   }
 void initLCD() { 
   lcd.begin(16, 2);
@@ -202,22 +204,12 @@ void measureTemperature() {
 void measureHumidity() {
   humidity = dht.readHumidity(); // Get humidity from DHT22
 
-  // if (backlightON) {
-  //   LEDsHum();
-  // } else {
-  //   // Ensure all LEDs are off when backlight is off
-  //   digitalWrite(led1, LOW);
-  //   digitalWrite(led2, LOW);
-  //   digitalWrite(led3, LOW);
-  // }
-
   Serial.begin(9600);  // Initialize serial communication
   Serial.print("Humidity: ");
   Serial.print(humidity);
   Serial.println(" %");
   Serial.end();  // End serial communication
 }
-
 
 
 // BUTTONS
@@ -235,6 +227,15 @@ void btnsDatetime() {
   set_state = digitalRead(btSet);
   adjust_state = digitalRead(btnNightM);
   alarm_state = digitalRead(btAlarm);
+
+  
+  // Gestione del tasto btnSnooze per tornare indietro di un valore
+  if (digitalRead(btnSnooze) == LOW) {
+    if (btnCount > 1) {
+      btnCount--; // Decrementiamo il contatore per tornare al valore precedente
+    }
+    delay(300); // Aggiungiamo un piccolo ritardo per evitare falsi positivi
+  }
   
   if (set_state == LOW) {
     if (!setupScreen) {
@@ -274,6 +275,15 @@ void btnsAlarm() {
   adjust_state = digitalRead(btnNightM);
   alarm_state = digitalRead(btAlarm);
   alarm_set_state = digitalRead(btAlarmSet);
+
+   
+  // Gestione del tasto btnSnooze per tornare indietro di un valore
+  if (digitalRead(btnSnooze) == LOW) {
+    if (btnCount > 6) {
+      btnCount--; // Decrementiamo il contatore per tornare al valore precedente
+    }
+    delay(300); // Aggiungiamo un piccolo ritardo per evitare falsi positivi
+  }
 
   
   if (alarm_set_state == LOW) {
@@ -338,6 +348,8 @@ void alarmToggle() {
     }
   }
 }
+
+
 
 
 // Read time and date from DS3231 RTC
@@ -432,7 +444,16 @@ void timeSetup() {
   int down_state = alarm_state;
   if (btnCount <= 5) {
     if (btnCount == 1) { // Set Hour
-      lcd.setCursor(4, 0);      lcd.print(">");
+       lcd.setCursor(4, 0);
+      lcd.print(">");
+      lcd.setCursor(9, 0);
+      lcd.print(" ");
+      lcd.setCursor(1, 1);
+      lcd.print(" ");
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       if (up_state == LOW) { // Up button +
         if (H < 23) {
           H++;
@@ -450,10 +471,16 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 2) { // Set Minutes
-      lcd.setCursor(4, 0);
+     lcd.setCursor(4, 0);
       lcd.print(" ");
       lcd.setCursor(9, 0);
       lcd.print(">");
+      lcd.setCursor(1, 1);
+      lcd.print(" ");
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       if (up_state == LOW) {
         if (M < 59) {
           M++;
@@ -471,10 +498,16 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 3) { // Set Day
+      lcd.setCursor(4, 0);
+      lcd.print(" ");
       lcd.setCursor(9, 0);
       lcd.print(" ");
       lcd.setCursor(1, 1);
       lcd.print(">");
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       
       if (up_state == LOW) {
         if (DD < 31) {
@@ -493,11 +526,16 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 4) { // Set Month
+      lcd.setCursor(4, 0);
+      lcd.print(" ");
+      lcd.setCursor(9, 0);
+      lcd.print(" ");
       lcd.setCursor(1, 1);
       lcd.print(" ");
       lcd.setCursor(6, 1);
       lcd.print(">");
-      
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       if (up_state == LOW) {
         if (MM < 12) {
           MM++;
@@ -515,6 +553,12 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 5) { // Set Year
+      lcd.setCursor(4, 0);
+      lcd.print(" ");
+      lcd.setCursor(9, 0);
+      lcd.print(" ");
+      lcd.setCursor(1, 1);
+      lcd.print(" ");
       lcd.setCursor(6, 1);
       lcd.print(" ");
       lcd.setCursor(11, 1);
@@ -628,8 +672,10 @@ void setAlarmTime() {
 void callAlarm() {
   static unsigned long lastMillis = 0;
   static bool beepState = false;
+  static bool snoozeActive = false;
+  static unsigned long snoozeStartTime = 0;
 
-  if (aH == sH && aM == sM) {
+  if (aH == sH && aM == sM && !snoozeActive) {
     turnItOn = true;
   }
 
@@ -646,6 +692,20 @@ void callAlarm() {
       beepState = true;
       lastMillis = currentMillis;
     }
+
+    // Check if snooze button is pressed
+    if (digitalRead(btnSnooze) == LOW) {
+      noTone(buzzer);
+      turnItOn = false;
+      snoozeActive = true;
+      snoozeStartTime = currentMillis;
+    }
+  }
+
+  // Handle snooze functionality
+  if (snoozeActive && millis() - snoozeStartTime >= 20000) { // Snooze time
+    snoozeActive = false;
+    turnItOn = true;
   }
 
   // Turn off the buzzer and reset states when the alarm button is pressed
@@ -653,9 +713,11 @@ void callAlarm() {
     noTone(buzzer);
     turnItOn = false;
     beepState = false;
+    snoozeActive = false;
     lastMillis = 0;
   }
 }
+
 
 
 
