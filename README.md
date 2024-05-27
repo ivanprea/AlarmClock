@@ -40,20 +40,71 @@ This code sets up an Arduino-based alarm clock inspired by an Elegoo project (ht
 
 The design to display the humidity percentage via LEDs is overcomplicated. Aesthetic preference was chosen over readability. The initial idea was to use three LEDs (Yellow 30%-40%, Green 40%-50%, and Red 50%-60%), but to maintain a minimal design with matching blue LEDs for the LCD, an alternative solution was implemented. Although this design indicates a more accurate range of humidity percentages, it may not be as intuitive. If you replicate this project, you are not obligated to use this logic for displaying humidity.
 
-![HumidityLedsLogicSmall](https://github.com/ivanprea/AlarmClock/assets/78477048/b64416f5-2de8-4b26-a354-be3a1e812d87)
-
+![HumidityLedsLogic](https://github.com/ivanprea/AlarmClock/assets/78477048/8658bab2-1e98-49b6-9ad3-2e585d580f90)
 
 
 ## Schematic:
 
-![AlarmClockSchematic](https://github.com/ivanprea/AlarmClock/assets/78477048/11613fd0-6c07-4829-9e22-0358411c37f3)
+![AlarmClockSchematic](https://github.com/ivanprea/AlarmClock/assets/78477048/d377a258-9a2e-4ab2-8b17-9ed5b26733d9)
 
 
-## Bugs:
-*Feel free to make any adjustment to the code to improve it*
+## Complete Wiring Summary:
 
-- When entering the Time/Date setup, after setting the Year, if the Set Button is clicked again, it mistakenly goes to the Alarm setup before saving. This should be avoided. The Set Button should only allow the user to set Time/Date. The Alarm Set/Save Button should only allow the user to set and save the alarm.
+**LCD Display 1602A:**
+- RS to Pin 2
+- E to Pin 3
+- D4 to Pin 4
+- D5 to Pin 5
+- D6 to Pin 6
+- D7 to Pin 7
+- VSS to GND
+- VDD to +5V
+- V0 to a potentiometer (middle pin) for contrast adjustment (other two pins to +5V and GND)
+- A (Anode, backlight) to +5V through
+- K (Cathode, backlight) to Collector of NPN 2222
 
-- When entering the setup mode and exiting, whether or not any modifications are made, the clock's seconds automatically reset to zero.
 
-- Buzzer will ring only for one minute.
+**NPN 2222 Transistor:**
+- Collector (C): Connect to the cathode (K) of the LCD backlight
+- Emitter (E): Connect to GND
+- Base (B): Connect to a resistor to Pin 8
+
+
+**DS3231 RTC Module:**
+- SDA to SDA
+- SCL to SCL
+- VCC to +5V
+- GND to GND
+
+
+**DHT22 Sensor:**
+- VCC to +5V
+- GND to GND
+- Data to Pin A3
+
+
+**Push Buttons:**
+- Button 1 (Set DateTime):
+  One pin to pin 11 and the other to GND through a current-limiting 10k resistor
+- Button 2 (Night Mode):
+  One pin to pin 12 and the other to GND through a current-limiting 10k resistor
+- Button 3 (Alarm):
+  One pin to pin 13 and the other to GNDthrough a current-limiting 10k resistor
+- Button 4 (Set Alarm):
+  One pin to pin 10 and the other to GND through a current-limiting 10k resistor
+
+
+**LEDs:**
+- LED1:
+  Anode to Analog Pin A0 and Cathode to GND through a current-limiting 5k resistor
+- LED2:
+  Anode to Analog Pin A1 and Cathode to GND through a current-limiting 5k resistor
+- LED3:
+  Anode to Analog Pin A2 and Cathode to GND through a current-limiting 5k resistor
+
+
+**Buzzer:**
+- Positive tol Pin 9
+- Negative to GND
+
+
