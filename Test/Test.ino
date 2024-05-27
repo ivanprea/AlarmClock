@@ -32,6 +32,17 @@ byte temp[8] = {
   0b00000,
 };
 
+byte percent[8] = {
+  0b00000,
+  0b11001,
+  0b11010,
+  0b00100,
+  0b01000,
+  0b01011,
+  0b10011,
+  0b00000,
+};
+
 // DS3231 i2c module
 RTC_DS3231 rtc;
 
@@ -53,9 +64,8 @@ const int npnBase = 8;
 
 
 // LEDs pins
-const int led1 = A0;
-const int led2 = A1;
-const int led3 = A2;
+const int ledAlarm = A0;
+
 
 
 // Variables
@@ -89,6 +99,10 @@ boolean alarmON = false;
 boolean turnItOn = false;
 boolean backlightON = true;
 bool isSettingDateTime = false; 
+bool displayTemperature = true;  // Flag to toggle display
+unsigned long lastToggleTime = 0;
+const unsigned long toggleInterval = 15000; // 10 seconds
+
 
 void setup() {
   initDS3231();
@@ -109,9 +123,7 @@ void setup() {
   }
 }
 void initLeds() { 
-  pinMode(led1, OUTPUT);
-  pinMode(led2, OUTPUT);
-  pinMode(led3, OUTPUT);
+  pinMode(ledAlarm, OUTPUT);
   }
 void initBTNs() { 
   pinMode(btSet, INPUT_PULLUP);
@@ -123,8 +135,10 @@ void initLCD() {
   lcd.begin(16, 2);
   lcd.createChar(1, clocksymbol);
   lcd.createChar(2, temp);
+  lcd.createChar(3, percent); // Add this line
   digitalWrite(isbacklight, HIGH);
-  }
+}
+
 void initDS3231() { 
   rtc.begin();
   }
@@ -137,6 +151,14 @@ void initBuzz() {
 void loop() {
   readBtns();       // Read buttons
   getTimeDate();    // Read time and date from RTC
+
+  unsigned long currentMillis = millis();
+  // Toggle the display between temperature and humidity every 10 seconds
+  if (currentMillis - lastToggleTime >= toggleInterval) {
+    displayTemperature = !displayTemperature;
+    lastToggleTime = currentMillis;
+  }
+
   if (!setupScreen) {
     lcdPrint();     // Normally print the current time/date/alarm to the LCD
     if (alarmON) {
@@ -150,7 +172,6 @@ void loop() {
   }
 
   // Read and print temperature and humidity values every minute
-  unsigned long currentMillis = millis();
   if (currentMillis - starttime >= 1500) { 
     starttime = currentMillis;  // Reset the timer
     measureTemperature();  // Read temperature
@@ -181,14 +202,14 @@ void measureTemperature() {
 void measureHumidity() {
   humidity = dht.readHumidity(); // Get humidity from DHT22
 
-  if (backlightON) {
-    LEDsHum();
-  } else {
-    // Ensure all LEDs are off when backlight is off
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
-    digitalWrite(led3, LOW);
-  }
+  // if (backlightON) {
+  //   LEDsHum();
+  // } else {
+  //   // Ensure all LEDs are off when backlight is off
+  //   digitalWrite(led1, LOW);
+  //   digitalWrite(led2, LOW);
+  //   digitalWrite(led3, LOW);
+  // }
 
   Serial.begin(9600);  // Initialize serial communication
   Serial.print("Humidity: ");
@@ -197,56 +218,7 @@ void measureHumidity() {
   Serial.end();  // End serial communication
 }
 
-// LEDs Humidity
-void LEDsHum() {
-  if (humidity < 30) {
-     digitalWrite(led2, LOW);
-    digitalWrite(led3, LOW);
-    digitalWrite(led1, LOW);
-    delay(200);
-    digitalWrite(led1, HIGH);
-    delay(200);
-    digitalWrite(led1, LOW);
-    delay(200);
-    digitalWrite(led1, HIGH);
-    
-  } else if (humidity >= 30 && humidity < 35) {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, LOW);
-    digitalWrite(led3, LOW);
-  } else if (humidity >= 35 && humidity < 40) {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, LOW);
-  } else if (humidity >= 40 && humidity < 45) {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, LOW);
-  } else if (humidity >= 45 && humidity < 50) {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, HIGH);
-  } else if (humidity >= 50 && humidity < 55) {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
-    digitalWrite(led3, HIGH);
-  } else if (humidity >= 55 && humidity < 60) {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, HIGH);
-  } else {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, LOW);
-    delay(200);
-    digitalWrite(led3, HIGH);
-    delay(200);
-    digitalWrite(led3, LOW);
-    delay(200);
-    digitalWrite(led3, HIGH);
-    
-  }
-}
+
 
 // BUTTONS
 // Read buttons state
@@ -339,13 +311,11 @@ void btnsNightMode() {
       if (backlightON) {
         backlightON = false;
         digitalWrite(isbacklight, LOW);
-        digitalWrite(led1, LOW);
-        digitalWrite(led2, LOW);
-        digitalWrite(led3, LOW);
+        digitalWrite(ledAlarm, LOW);
       } else {
         backlightON = true;
         digitalWrite(isbacklight, HIGH);
-        LEDsHum();
+        digitalWrite(ledAlarm, HIGH);
       }
       delay(500);
     }
@@ -355,17 +325,19 @@ void alarmToggle() {
   alarm_state = digitalRead(btAlarm);
   
   if (!setupScreen) {
-      if (alarm_state == LOW) {
-       if (alarmON) {
-         alarm = "     ";
-         alarmON = false;
-         }  else {
-         alarmON = true;
-        }
-        delay(500);
+    if (alarm_state == LOW) {
+      if (alarmON) {
+        alarm = "     ";
+        alarmON = false;
+        digitalWrite(ledAlarm, LOW); // Turn off the alarm LED
+      } else {
+        alarmON = true;
+        digitalWrite(ledAlarm, HIGH); // Turn on the alarm LED
       }
-     }
+      delay(500);
     }
+  }
+}
 
 
 // Read time and date from DS3231 RTC
@@ -423,7 +395,11 @@ void lcdPrint() {
   // Convert the temperature to a formatted string with one decimal place
   char tempStr[6]; // A string of 6 characters should be sufficient to format the temperature
   dtostrf(tempC, 4, 1, tempStr); // Convert the float value tempC to a string with one decimal place
-  
+
+  // Convert the humidity to a formatted string with one decimal place
+  char humStr[6];
+  dtostrf(humidity, 4, 1, humStr);
+
   String line1 = sH + ":" + sM + ":" + sS + " |";
   lcd.setCursor(0, 0); // First line
   lcd.print(line1);
@@ -435,15 +411,16 @@ void lcdPrint() {
   lcd.setCursor(11, 0);
   lcd.print(line2);
 
-  String line3 = sDD + "-" + sMM + "-" + sYY + " | " + tempStr; // Use the formatted string for the temperature
+  // Display temperature or humidity based on the flag
   lcd.setCursor(0, 1); // Second line
-  lcd.print(line3);
-  if (setupScreen) {
-    lcd.setCursor(13, 1);
-    lcd.print("");
+  if (displayTemperature) {
+    lcd.print(sDD + "-" + sMM + "-" + sYY + " | " + tempStr);
+    lcd.setCursor(15, 1); // Position for the temperature symbol
+    lcd.write(2); // Temperature symbol
   } else {
-    lcd.setCursor(15, 1);
-    lcd.write(2);
+    lcd.print(sDD + "-" + sMM + "-" + sYY + " | " + humStr);
+    lcd.setCursor(15, 1); // Position for the percentage symbol
+    lcd.write(3); // Percentage symbol
   }
 }
 
