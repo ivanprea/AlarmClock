@@ -131,7 +131,7 @@ void initBTNs() {
   pinMode(btnNightM, INPUT_PULLUP);
   pinMode(btAlarm, INPUT_PULLUP);
   pinMode(btAlarmSet, INPUT_PULLUP); 
-    pinMode(btnSnooze, INPUT_PULLUP);
+  pinMode(btnSnooze, INPUT_PULLUP);
   }
 void initLCD() { 
   lcd.begin(16, 2);
