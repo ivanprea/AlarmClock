@@ -41,6 +41,8 @@ RTC_DS3231 rtc;
 DHT dht(DHTPIN, DHTTYPE);
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+//Buttons pins
 const int btAlarmSet = 10; 
 const int btSet = 11;
 const int btnNightM = 12;
