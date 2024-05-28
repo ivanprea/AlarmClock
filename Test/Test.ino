@@ -117,7 +117,7 @@ bool displayTemperature = true;  // Flag to toggle display
 unsigned long lastToggleTime = 0;
 const unsigned long toggleInterval = 15000; // 10 seconds
 bool snoozeActive = false;
-bool alarmWasSnoozed = false;  // Aggiungi questa variabile
+bool alarmWasSnoozed = false;  
 
 
 void setup() {
