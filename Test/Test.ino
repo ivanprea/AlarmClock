@@ -314,7 +314,7 @@ void btnsAlarm() {
       lcd.print("Set up");
       lcd.setCursor(0, 1);
       lcd.print("ALARM and SNOOZE");
-      delay(1050);
+      delay(1000);
       btnCount = 6; 
       lcd.clear();
       delay(200);
