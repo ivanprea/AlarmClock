@@ -43,6 +43,17 @@ byte percent[8] = {
   0b00000,
 };
 
+byte snooze[8] = {
+  B00000,
+  B11111,
+  B00010,
+  B00100,
+  B01000,
+  B11111,
+  B00000,
+  B00000,
+};
+
 // DS3231 i2c module
 RTC_DS3231 rtc;
 
@@ -153,7 +164,8 @@ void initLCD() {
   lcd.begin(16, 2);
   lcd.createChar(1, clocksymbol);
   lcd.createChar(2, temp);
-  lcd.createChar(3, percent); // Add this line
+  lcd.createChar(3, percent);
+  lcd.createChar(4, snooze);
   digitalWrite(isbacklight, HIGH);
 }
 
@@ -262,7 +274,7 @@ void btnsDatetime() {
       lcd.print("Set up");
       lcd.setCursor(4, 1);
       lcd.print("DATETIME");
-      delay(950);
+      delay(1000);
       lcd.clear();
       btnCount = 1; 
       lcd.clear();
@@ -298,9 +310,9 @@ void btnsAlarm() {
       lcd.clear();
       lcd.setCursor(5, 0);
       lcd.print("Set up");
-      lcd.setCursor(3, 1);
-      lcd.print("ALARM Time");
-      delay(950);
+      lcd.setCursor(0, 1);
+      lcd.print("ALARM and SNOOZE");
+      delay(1050);
       btnCount = 6; 
       lcd.clear();
       delay(200);
@@ -617,13 +629,25 @@ void setAlarmTime() {
   int up_state = adjust_state;
   int down_state = alarm_state;
 
-  lcd.setCursor(0, 0);
-  lcd.write(1); // Clocksymbol
-  lcd.setCursor(1, 0);
-  lcd.print("Set your Alarm:");
-  lcd.setCursor(15, 0);
-  lcd.write(1); // Clocksymbol
   String line2;
+
+  if (btnCount == 6) { // Alarm message
+    lcd.setCursor(1, 0);
+    lcd.write(1); // Clocksymbol
+    lcd.setCursor(3, 0);
+    lcd.print("Set  Alarm");
+    lcd.setCursor(14, 0);
+    lcd.write(1); // Clocksymbol
+  }
+
+  if (btnCount == 8) { // Snooze message
+    lcd.setCursor(1, 0);
+    lcd.write(4); // Clocksymbol
+    lcd.setCursor(3, 0);
+    lcd.print("Set Snooze");
+    lcd.setCursor(14, 0);
+    lcd.write(4); // Clocksymbol
+  }
 
   if (btnCount == 6) { // Set alarm Hour
     if (up_state == LOW) {
@@ -642,7 +666,7 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "    >" + aH + " : " + aM + "    ";
+    line2 = "    >" + String(AH) + " : " + String(AM) + "    ";
   } else if (btnCount == 7) { // Set alarm Minutes
     if (up_state == LOW) {
       if (AM < 59) {
@@ -660,25 +684,25 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "     " + aH + " :" + ">" + aM + " ";
+    line2 = "     " + String(AH) + " :" + ">" + String(AM) + " ";
   } else if (btnCount == 8) { // Set snooze Minutes
     if (up_state == LOW) {
       if (snoozeMinutes < 59) {
         snoozeMinutes++;
       } else {
-        snoozeMinutes = 1;
+        snoozeMinutes = 0;
       }
       delay(350);
     }
     if (down_state == LOW) {
-      if (snoozeMinutes > 1) {
+      if (snoozeMinutes > 0) {
         snoozeMinutes--;
       } else {
         snoozeMinutes = 59;
       }
       delay(350);
     }
-    line2 = " Snooze >" + String(snoozeMinutes) + " mins";
+    line2 = "    >" + (snoozeMinutes < 10 ? "0" + String(snoozeMinutes) : String(snoozeMinutes)) + " min.";
   }
 
   lcd.setCursor(0, 1);
