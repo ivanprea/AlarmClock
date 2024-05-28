@@ -654,7 +654,7 @@ void setAlarmTime() {
     lcd.setCursor(1, 0);
     lcd.write(1); // Clock symbol
     lcd.setCursor(3, 0);
-    lcd.print("Set Alarm");
+    lcd.print("Set  Alarm");
     lcd.setCursor(14, 0);
     lcd.write(1); // Clock symbol
   }
@@ -687,7 +687,7 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "    >" + String(AH) + " : " + String(AM) + "    ";
+    line2 = "    >" + String(AH) + " : " + (AM < 10 ? "0" + String(AM) : String(AM)) + "    ";
   }
   // Adjust alarm minutes
   else if (btnCount == 7) {
@@ -707,7 +707,7 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "     " + String(AH) + " :" + ">" + String(AM) + " ";
+    line2 = "     " + String(AH) + " :>" + (AM < 10 ? "0" + String(AM) : String(AM)) + " "; // Formatta i minuti con due cifre
   }
   // Adjust snooze minutes
   else if (btnCount == 8) {
