@@ -92,6 +92,8 @@ int tempReading;
 unsigned long starttime;
 float temperature;
 float humidity;
+int snoozeMinutes = 10; // Default snooze time is 10 minutes
+
 
 
 // Boolean flags
@@ -123,6 +125,18 @@ void setup() {
   }
   if (AM > 59) {
     AM = 0;
+  }
+  AH = EEPROM.read(0);
+  AM = EEPROM.read(1);
+  snoozeMinutes = EEPROM.read(2); // Read the snooze time from EEPROM
+  if (AH > 23) {
+    AH = 0;
+  }
+  if (AM > 59) {
+    AM = 0;
+  }
+  if (snoozeMinutes > 59) {
+    snoozeMinutes = 10; // Default to 10 minutes if invalid value
   }
 }
 void initLeds() { 
@@ -278,16 +292,6 @@ void btnsAlarm() {
   alarm_state = digitalRead(btAlarm);
   alarm_set_state = digitalRead(btAlarmSet);
 
-   
-  // Gestione del tasto btnSnooze per tornare indietro di un valore
-  if (digitalRead(btnSnooze) == LOW) {
-    if (btnCount > 6) {
-      btnCount--; // Decrementiamo il contatore per tornare al valore precedente
-    }
-    delay(300); // Aggiungiamo un piccolo ritardo per evitare falsi positivi
-  }
-
-  
   if (alarm_set_state == LOW) {
     if (!setupScreen) {
       setupScreen = true;
@@ -306,6 +310,7 @@ void btnsAlarm() {
       rtc.adjust(DateTime(YY, MM, DD, H, M, now.second())); 
       EEPROM.write(0, AH);  
       EEPROM.write(1, AM);  
+      EEPROM.write(2, snoozeMinutes); // Save the snooze time to EEPROM
       lcd.print("   Saving....");
       delay(800);
       lcd.clear();
@@ -315,6 +320,7 @@ void btnsAlarm() {
     delay(500);
   }
 }
+
 void btnsNightMode() {
   adjust_state = digitalRead(btnNightM);
   
@@ -611,16 +617,12 @@ void setAlarmTime() {
   int up_state = adjust_state;
   int down_state = alarm_state;
 
-  
   lcd.setCursor(0, 0);
-  lcd.write(1); //Clocksymbol
-
- 
+  lcd.write(1); // Clocksymbol
   lcd.setCursor(1, 0);
   lcd.print("Set your Alarm:");
-
   lcd.setCursor(15, 0);
-  lcd.write(1); //Clocksymbol
+  lcd.write(1); // Clocksymbol
   String line2;
 
   if (btnCount == 6) { // Set alarm Hour
@@ -659,6 +661,24 @@ void setAlarmTime() {
       delay(350);
     }
     line2 = "     " + aH + " :" + ">" + aM + " ";
+  } else if (btnCount == 8) { // Set snooze Minutes
+    if (up_state == LOW) {
+      if (snoozeMinutes < 59) {
+        snoozeMinutes++;
+      } else {
+        snoozeMinutes = 1;
+      }
+      delay(350);
+    }
+    if (down_state == LOW) {
+      if (snoozeMinutes > 1) {
+        snoozeMinutes--;
+      } else {
+        snoozeMinutes = 59;
+      }
+      delay(350);
+    }
+    line2 = " Snooze >" + String(snoozeMinutes) + " mins";
   }
 
   lcd.setCursor(0, 1);
@@ -667,8 +687,12 @@ void setAlarmTime() {
   if (set_state == LOW && btnCount == 6) {
     btnCount = 7; // Move to setting minutes after setting hours
     delay(200);
+  } else if (set_state == LOW && btnCount == 7) {
+    btnCount = 8; // Move to setting snooze minutes after setting alarm minutes
+    delay(200);
   }
 }
+
 
 
 // ALARM TOGGLE
@@ -706,7 +730,7 @@ void callAlarm() {
   }
 
   // Handle snooze functionality
-  if (snoozeActive && millis() - snoozeStartTime >= 20000) { // Snooze time
+  if (snoozeActive && millis() - snoozeStartTime >= (snoozeMinutes * 60000)) { // Snooze time
     snoozeActive = false;
     turnItOn = true;
   }
@@ -721,6 +745,4 @@ void callAlarm() {
     alarmWasSnoozed = false;  // Resetta il flag di snooze
   }
 }
-
-
 
