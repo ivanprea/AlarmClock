@@ -734,10 +734,12 @@ void callAlarm() {
       noTone(buzzer);
       beepState = false;
       lastMillis = currentMillis;
+      digitalWrite(ledAlarm, LOW); // Spegni il LED quando spegni il buzzer
     } else if (!beepState && (currentMillis - lastMillis >= 200)) { // Pause duration in ms
       tone(buzzer, 1000); // Emit beep sound
       beepState = true;
       lastMillis = currentMillis;
+      digitalWrite(ledAlarm, HIGH); // Accendi il LED quando attivi il buzzer
     }
 
     // Check if snooze button is pressed
@@ -747,6 +749,7 @@ void callAlarm() {
       snoozeActive = true;
       alarmWasSnoozed = true;  // Set flag snooze
       snoozeStartTime = currentMillis;
+      digitalWrite(ledAlarm, LOW); // Spegni il LED quando attivi lo snooze
     }
   }
 
@@ -754,6 +757,7 @@ void callAlarm() {
   if (snoozeActive && millis() - snoozeStartTime >= (snoozeMinutes * 60000)) { // Snooze time
     snoozeActive = false;
     turnItOn = true;
+    digitalWrite(ledAlarm, HIGH); // Accendi il LED quando termina lo snooze e riattiva l'allarme
   }
 
   // Turn off the buzzer and reset states when the alarm button is pressed
@@ -764,6 +768,7 @@ void callAlarm() {
     snoozeActive = false;
     lastMillis = 0;
     alarmWasSnoozed = false;  // Reset flag snooze
+    digitalWrite(ledAlarm, LOW); // Spegni il LED quando spegni il buzzer manualmente
   }
 }
 
