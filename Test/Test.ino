@@ -633,25 +633,28 @@ void setAlarmTime() {
 
   String line2;
 
-  if (btnCount == 6) { // Alarm message
+  // Set the message for the alarm setup
+  if (btnCount == 6 || btnCount == 7) {
     lcd.setCursor(1, 0);
-    lcd.write(1); // Clocksymbol
+    lcd.write(1); // Clock symbol
     lcd.setCursor(3, 0);
-    lcd.print("Set  Alarm");
+    lcd.print("Set Alarm");
     lcd.setCursor(14, 0);
-    lcd.write(1); // Clocksymbol
+    lcd.write(1); // Clock symbol
   }
 
-  if (btnCount == 8) { // Snooze message
+  // Set the message for the snooze setup
+  if (btnCount == 8) {
     lcd.setCursor(1, 0);
-    lcd.write(4); // Clocksymbol
+    lcd.write(4); // Snooze symbol
     lcd.setCursor(3, 0);
     lcd.print("Set Snooze");
     lcd.setCursor(14, 0);
-    lcd.write(4); // Clocksymbol
+    lcd.write(4); // Snooze symbol
   }
 
-  if (btnCount == 6) { // Set alarm Hour
+  // Adjust alarm hour
+  if (btnCount == 6) {
     if (up_state == LOW) {
       if (AH < 23) {
         AH++;
@@ -669,7 +672,9 @@ void setAlarmTime() {
       delay(350);
     }
     line2 = "    >" + String(AH) + " : " + String(AM) + "    ";
-  } else if (btnCount == 7) { // Set alarm Minutes
+  }
+  // Adjust alarm minutes
+  else if (btnCount == 7) {
     if (up_state == LOW) {
       if (AM < 59) {
         AM++;
@@ -687,7 +692,9 @@ void setAlarmTime() {
       delay(350);
     }
     line2 = "     " + String(AH) + " :" + ">" + String(AM) + " ";
-  } else if (btnCount == 8) { // Set snooze Minutes
+  }
+  // Adjust snooze minutes
+  else if (btnCount == 8) {
     if (up_state == LOW) {
       if (snoozeMinutes < 59) {
         snoozeMinutes++;
@@ -717,8 +724,6 @@ void setAlarmTime() {
     btnCount = 8; // Move to setting snooze minutes after setting alarm minutes
     delay(200);
   }
-
-  
 }
 
 
