@@ -103,6 +103,8 @@ bool isSettingDateTime = false;
 bool displayTemperature = true;  // Flag to toggle display
 unsigned long lastToggleTime = 0;
 const unsigned long toggleInterval = 15000; // 10 seconds
+bool snoozeActive = false;
+bool alarmWasSnoozed = false;  // Aggiungi questa variabile
 
 
 void setup() {
@@ -333,23 +335,24 @@ void btnsNightMode() {
 }
 void alarmToggle() {
   alarm_state = digitalRead(btAlarm);
-  
+
   if (!setupScreen) {
     if (alarm_state == LOW) {
       if (alarmON) {
         alarm = "     ";
         alarmON = false;
+        turnItOn = false;  // Assicurati che l'allarme sia spento
         digitalWrite(ledAlarm, LOW); // Turn off the alarm LED
       } else {
-        alarmON = true;
-        digitalWrite(ledAlarm, HIGH); // Turn on the alarm LED
+        if (!alarmWasSnoozed) {  // Controlla se l'allarme non è stato snoozato
+          alarmON = true;
+          digitalWrite(ledAlarm, HIGH); // Turn on the alarm LED
+        }
       }
       delay(500);
     }
   }
 }
-
-
 
 
 // Read time and date from DS3231 RTC
@@ -672,7 +675,6 @@ void setAlarmTime() {
 void callAlarm() {
   static unsigned long lastMillis = 0;
   static bool beepState = false;
-  static bool snoozeActive = false;
   static unsigned long snoozeStartTime = 0;
 
   if (aH == sH && aM == sM && !snoozeActive) {
@@ -698,6 +700,7 @@ void callAlarm() {
       noTone(buzzer);
       turnItOn = false;
       snoozeActive = true;
+      alarmWasSnoozed = true;  // Imposta il flag di snooze
       snoozeStartTime = currentMillis;
     }
   }
@@ -715,9 +718,9 @@ void callAlarm() {
     beepState = false;
     snoozeActive = false;
     lastMillis = 0;
+    alarmWasSnoozed = false;  // Resetta il flag di snooze
   }
 }
-
 
 
 
