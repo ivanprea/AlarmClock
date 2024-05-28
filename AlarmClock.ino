@@ -687,7 +687,7 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "    >" + String(AH) + " : " + (AM < 10 ? "0" + String(AM) : String(AM)) + "    ";
+    line2 = "    >" + (AH < 10 ? "0" + String(AH) : String(AH)) + " : " + (AM < 10 ? "0" + String(AM) : String(AM)) + "    ";
   }
   // Adjust alarm minutes
   else if (btnCount == 7) {
@@ -707,7 +707,7 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "     " + String(AH) + " :>" + (AM < 10 ? "0" + String(AM) : String(AM)) + " "; // Formatta i minuti con due cifre
+    line2 = "     " + (AH < 10 ? "0" + String(AH) : String(AH)) + " :>" + (AM < 10 ? "0" + String(AM) : String(AM)) + " "; // Formatta i minuti con due cifre
   }
   // Adjust snooze minutes
   else if (btnCount == 8) {
@@ -741,7 +741,6 @@ void setAlarmTime() {
     delay(200);
   }
 }
-
 
 
 // ALARM TOGGLE
