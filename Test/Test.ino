@@ -127,8 +127,12 @@ void setup() {
   initLeds();
   initBuzz();
   initDTH22();
+  initAlarmTime();
+  initSnooze();
   Serial.begin(9600);
   delay(100);
+}
+void initAlarmTime() { 
   AH = EEPROM.read(0);
   AM = EEPROM.read(1);
   if (AH > 23) {
@@ -137,9 +141,9 @@ void setup() {
   if (AM > 59) {
     AM = 0;
   }
-  AH = EEPROM.read(0);
-  AM = EEPROM.read(1);
-  snoozeMinutes = EEPROM.read(2); // Read the snooze time from EEPROM
+  }
+void initSnooze() { 
+    snoozeMinutes = EEPROM.read(2); // Read the snooze time from EEPROM
   if (AH > 23) {
     AH = 0;
   }
@@ -149,7 +153,7 @@ void setup() {
   if (snoozeMinutes > 59) {
     snoozeMinutes = 10; // Default to 10 minutes if invalid value
   }
-}
+  }
 void initLeds() { 
   pinMode(ledAlarm, OUTPUT);
   }
@@ -206,14 +210,7 @@ void loop() {
     starttime = currentMillis;  // Reset the timer
     measureTemperature();  // Read temperature
     measureHumidity();     // Read humidity
-    Serial.begin(9600);  // Initialize serial communication
-    Serial.print("Temperature: ");
-    Serial.print(tempC);
-    Serial.println(" °C");
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
-    Serial.println(" %");
-    Serial.end();  // End serial communication
+    
   }
 }
 
@@ -257,13 +254,13 @@ void btnsDatetime() {
   alarm_state = digitalRead(btAlarm);
 
   
-  // Gestione del tasto btnSnooze per tornare indietro di un valore
-  if (digitalRead(btnSnooze) == LOW) {
-    if (btnCount > 1) {
-      btnCount--; // Decrementiamo il contatore per tornare al valore precedente
-    }
-    delay(300); // Aggiungiamo un piccolo ritardo per evitare falsi positivi
+// Handle the btnSnooze button to move back to a previous value
+if (digitalRead(btnSnooze) == LOW) {
+  if (btnCount > 1) {
+    btnCount--; // Decrement the counter to move back to the previous value
   }
+  delay(300); // Add a small delay to avoid false positives
+}
   
   if (set_state == LOW) {
     if (!setupScreen) {
@@ -359,10 +356,10 @@ void alarmToggle() {
       if (alarmON) {
         alarm = "     ";
         alarmON = false;
-        turnItOn = false;  // Assicurati che l'allarme sia spento
+        turnItOn = false;  // Make sure the alarm is turned off
         digitalWrite(ledAlarm, LOW); // Turn off the alarm LED
       } else {
-        if (!alarmWasSnoozed) {  // Controlla se l'allarme non è stato snoozato
+        if (!alarmWasSnoozed) {  // If the alarm is currently off and not snoozed, turn it on
           alarmON = true;
           digitalWrite(ledAlarm, HIGH); // Turn on the alarm LED
         }
@@ -384,7 +381,7 @@ void getTimeDate() {
     M = now.minute();
     S = now.second();
   }
-  // Make some fixes...
+  
   if (DD < 10) {
     sDD = '0' + String(DD);
   } else {
@@ -748,7 +745,7 @@ void callAlarm() {
       noTone(buzzer);
       turnItOn = false;
       snoozeActive = true;
-      alarmWasSnoozed = true;  // Imposta il flag di snooze
+      alarmWasSnoozed = true;  // Set flag snooze
       snoozeStartTime = currentMillis;
     }
   }
@@ -766,7 +763,7 @@ void callAlarm() {
     beepState = false;
     snoozeActive = false;
     lastMillis = 0;
-    alarmWasSnoozed = false;  // Resetta il flag di snooze
+    alarmWasSnoozed = false;  // Reset flag snooze
   }
 }
 
