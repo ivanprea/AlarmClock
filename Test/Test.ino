@@ -246,7 +246,16 @@ void readBtns() {
     btnsAlarm();
   }
   alarmToggle();
+  btnprevious();
 }
+void btnprevious () {
+// Handle the btnSnooze button to move back to a previous value
+if (digitalRead(btnSnooze) == LOW) {
+   btnCount--; // Decrement the counter to move back to the previous value
+   delay(300); // Add a small delay to avoid false positives
+}
+ }
+
 // Time & Date
 void btnsDatetime() {
   set_state = digitalRead(btSet);
@@ -254,13 +263,7 @@ void btnsDatetime() {
   alarm_state = digitalRead(btAlarm);
 
   
-// Handle the btnSnooze button to move back to a previous value
-if (digitalRead(btnSnooze) == LOW) {
-  if (btnCount > 1) {
-    btnCount--; // Decrement the counter to move back to the previous value
-  }
-  delay(300); // Add a small delay to avoid false positives
-}
+
   
   if (set_state == LOW) {
     if (!setupScreen) {
@@ -712,6 +715,8 @@ void setAlarmTime() {
     btnCount = 8; // Move to setting snooze minutes after setting alarm minutes
     delay(200);
   }
+
+  
 }
 
 
