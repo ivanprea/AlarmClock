@@ -12,40 +12,31 @@ This code sets up an Arduino-based alarm clock inspired by an Elegoo project (ht
   
 - **DHT22 Humidity Sensor** (for reading humidity only)
   
-- **4 Push buttons**:
-    - **Set Button** (btSet): Opens time/date and alarm setup. Allows the user to navigate between hour/minute/etc. Press again to save and exit setup mode after setting the alarm.
-    - **Night Mode Button** (btnNightM): Toggles the backlight of the LCD display and LEDs (used to indicate humidity levels).
-    - **Alarm Button** (btAlarm): Toggles the alarm function on and off.
-    - **Alarm Set/Save Button** (btAlarmSet): Directly accesses the alarm setup mode. When in time/date or alarm setup if pressed on anyvalue it saves directly.
+- **5 Push buttons**
       
-- **4x10k resistors** for the buttons
+- **5x10k resistors** for the buttons
   
-- **3xLEDs**
+- **1xLED**
   
-- **3x5k resistors** for the LEDs (choose the resistor based on the desired LED brightness)
+- **1x5k resistors** for the LED (choose the resistor based on the desired LED brightness)
   
 - **Buzzer**
   
 - **NPN PN2222 Transistor**
   
-- **Potentiometer**
+- **2x5k resistor for pin VO LCD (I tried to put a one 10k resistor but it woudn't work, i don't why)**
   
 - **Wires**
 
   
 
-## Himidity leds logic:
 
-**!IMPORTANT!** 
-
-The design to display the humidity percentage via LEDs is overcomplicated. Aesthetic preference was chosen over readability. The initial idea was to use three LEDs (Yellow 30%-40%, Green 40%-50%, and Red 50%-60%), but to maintain a minimal design with matching blue LEDs for the LCD, an alternative solution was implemented. Although this design indicates a more accurate range of humidity percentages, it may not be as intuitive. If you replicate this project, you are not obligated to use this logic for displaying humidity.
-
-![HumidityLedsLogic](https://github.com/ivanprea/AlarmClock/assets/78477048/8658bab2-1e98-49b6-9ad3-2e585d580f90)
 
 
 ## Schematic:
 
-![AlarmClockSchematic](https://github.com/ivanprea/AlarmClock/assets/78477048/d377a258-9a2e-4ab2-8b17-9ed5b26733d9)
+![AlarmClockSchematic](https://github.com/ivanprea/AlarmClock/assets/78477048/011ff17d-dbac-4276-9ee1-4159d862a182)
+
 
 
 ## Complete Wiring Summary:
@@ -59,7 +50,7 @@ The design to display the humidity percentage via LEDs is overcomplicated. Aesth
 - D7 to Pin 7
 - VSS to GND
 - VDD to +5V
-- V0 to a potentiometer (middle pin) for contrast adjustment (other two pins to +5V and GND)
+- V0 to a 2x5k resitors then to GND (in the schematic is a single 10k but with it it does not work, that's why i put 2x5k)
 - A (Anode, backlight) to +5V through
 - K (Cathode, backlight) to Collector of NPN 2222
 
@@ -88,19 +79,16 @@ The design to display the humidity percentage via LEDs is overcomplicated. Aesth
   One pin to pin 11 and the other to GND through a current-limiting 10k resistor
 - Button 2 (Night Mode):
   One pin to pin 12 and the other to GND through a current-limiting 10k resistor
-- Button 3 (Alarm):
+- Button 3 (Snooze):
+  One pin to pin A1 and the other to GND through a current-limiting 10k resistor
+- Button 4 (Alarm):
   One pin to pin 13 and the other to GNDthrough a current-limiting 10k resistor
-- Button 4 (Set Alarm):
+- Button 5 (Set Alarm):
   One pin to pin 10 and the other to GND through a current-limiting 10k resistor
 
 
-**LEDs:**
-- LED1:
-  Anode to Analog Pin A0 and Cathode to GND through a current-limiting 5k resistor
-- LED2:
-  Anode to Analog Pin A1 and Cathode to GND through a current-limiting 5k resistor
-- LED3:
-  Anode to Analog Pin A2 and Cathode to GND through a current-limiting 5k resistor
+**LED:**
+  Anode to Analog Pin A= and Cathode to GND through a current-limiting 5k resistor
 
 
 **Buzzer:**
@@ -108,3 +96,24 @@ The design to display the humidity percentage via LEDs is overcomplicated. Aesth
 - Negative to GND
 
 
+## How it works:
+The primary function of the display is to provide essential information such as the current time, date, alarm hour, and temperature/humidity readings, with updates occurring every 10 seconds. The status of the alarm (ON/OFF) is visually indicated by a bell icon located to its left.
+
+Here's how the buttons operate:
+
+Alarm Button (btAlarm): Toggles the alarm function on and off. During datetime setup or alarm/snooze configuration, pressing this button decreases the selected value.
+
+Night Mode Button (btnNightM): Controls the backlight of the LCD display and the state of the LED (which still blinks when the buzzer is active). In setup modes, pressing this button increases the selected value.
+
+Snooze Button (btnSnooze): Initiates the snooze function, turning off the LED. During Datetime or Alarm/Snooze setup, pressing it selects the previous value.
+
+Set Button (btSet): Opens the Datetime setup. Allows the user to progress to the next value. Upon reaching the year value, pressing it again saves and exits. After saving, the clock seconds reset to 00.
+
+Alarm Set (btAlarmSet): Opens the Alarm and Snooze setup mode. Pressing it again directly saves the settings. The clock seconds do not reset to 00 in this mode. To reach the Snooze setup after reaching the minute of the alarm , press the Set Button. 
+
+The LED indicator illuminates when the alarm state is ON, as indicated by the bell icon next to the alarm hour. It blinks when the buzzer is active. Although the LED can be turned OFF using the Night Mode button, it will still blink when the buzzer is active.
+When the buzzer is active, a custom message will be displayed on the screen until the alarm is turned off or snoozed.
+
+
+
+      
