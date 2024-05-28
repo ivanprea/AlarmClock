@@ -427,35 +427,51 @@ void getTimeDate() {
 
 // LCD Print values to the display
 void lcdPrint() {
-  // Convert the temperature to a formatted string with one decimal place
-  char tempStr[6]; // A string of 6 characters should be sufficient to format the temperature
-  dtostrf(tempC, 4, 1, tempStr); // Convert the float value tempC to a string with one decimal place
+  if (!turnItOn) { // Controllo se il buzzer è attivo
+    // Converti la temperatura in una stringa formattata con una cifra decimale
+    char tempStr[6]; // Una stringa di 6 caratteri dovrebbe essere sufficiente per formattare la temperatura
+    dtostrf(tempC, 4, 1, tempStr); // Converti il valore float tempC in una stringa con una cifra decimale
 
-  // Convert the humidity to a formatted string with one decimal place
-  char humStr[6];
-  dtostrf(humidity, 4, 1, humStr);
+    // Converti l'umidità in una stringa formattata con una cifra decimale
+    char humStr[6];
+    dtostrf(humidity, 4, 1, humStr);
 
-  String line1 = sH + ":" + sM + ":" + sS + " |";
-  lcd.setCursor(0, 0); // First line
-  lcd.print(line1);
-  if (alarmON) {
-    lcd.setCursor(10, 0);
-    lcd.write(1);
-  }
-  String line2 = aH + ":" + aM;
-  lcd.setCursor(11, 0);
-  lcd.print(line2);
-
-  // Display temperature or humidity based on the flag
-  lcd.setCursor(0, 1); // Second line
-  if (displayTemperature) {
-    lcd.print(sDD + "-" + sMM + "-" + sYY + " | " + tempStr);
-    lcd.setCursor(15, 1); // Position for the temperature symbol
-    lcd.write(2); // Temperature symbol
+    String line1 = sH + ":" + sM + ":" + sS + " |";
+    lcd.setCursor(0, 0); // Prima riga
+    lcd.print(line1);
+    if (alarmON) {
+      lcd.setCursor(10, 0);
+      lcd.write(1);
+    }
+    String line2;
+    if (displayTemperature) {
+      line2 = sDD + "-" + sMM + "-" + sYY + " | " + tempStr;
+      lcd.setCursor(15, 1); // Posizione per il simbolo della temperatura
+      lcd.write(2); // Simbolo della temperatura
+    } else {
+      line2 = sDD + "-" + sMM + "-" + sYY + " | " + humStr;
+      lcd.setCursor(15, 1); // Posizione per il simbolo del percentuale
+      lcd.write(3); // Simbolo del percentuale
+    }
+    lcd.setCursor(0, 1); // Seconda riga
+    lcd.print(line2);
   } else {
-    lcd.print(sDD + "-" + sMM + "-" + sYY + " | " + humStr);
-    lcd.setCursor(15, 1); // Position for the percentage symbol
-    lcd.write(3); // Percentage symbol
+    // Messaggio quando il buzzer è attivo
+    lcd.setCursor(0, 0);
+    lcd.print(" Wake up buddy, ");
+    lcd.setCursor(0, 1);
+    lcd.print("u start to smell");
+  }
+
+  // Stampa l'orario dell'allarme solo se il buzzer non è attivo e la funzione snooze non è attiva
+  if ((!alarmON || digitalRead(btnSnooze) == LOW) && !snoozeActive && !turnItOn) {
+    String alarmTime = aH + ":" + aM;
+    lcd.setCursor(11, 0);
+    lcd.print(alarmTime);
+  } else if (digitalRead(btnSnooze) == LOW) {
+    String alarmTime = aH + ":" + aM;
+    lcd.setCursor(11, 0);
+    lcd.print(alarmTime);
   }
 }
 
