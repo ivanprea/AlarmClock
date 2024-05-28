@@ -250,11 +250,13 @@ void readBtns() {
 }
 void btnprevious () {
 // Handle the btnSnooze button to move back to a previous value
-if (digitalRead(btnSnooze) == LOW) {
-   btnCount--; // Decrement the counter to move back to the previous value
-   delay(300); // Add a small delay to avoid false positives
+  if (digitalRead(btnSnooze) == LOW) {
+    if (btnCount != 6) {  // Add this condition to prevent decrementing when btnCount is 6
+      btnCount--; // Decrement the counter to move back to the previous value
+      delay(300); // Add a small delay to avoid false positives
+    }
+  }
 }
- }
 
 // Time & Date
 void btnsDatetime() {
