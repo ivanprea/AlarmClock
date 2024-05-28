@@ -32,6 +32,28 @@ byte temp[8] = {
   0b00000,
 };
 
+byte percent[8] = {
+  0b00000,
+  0b11001,
+  0b11010,
+  0b00100,
+  0b01000,
+  0b01011,
+  0b10011,
+  0b00000,
+};
+
+byte snooze[8] = {
+  B00000,
+  B11111,
+  B00010,
+  B00100,
+  B01000,
+  B11111,
+  B00000,
+  B00000,
+};
+
 // DS3231 i2c module
 RTC_DS3231 rtc;
 
@@ -47,15 +69,15 @@ const int btAlarmSet = 10;
 const int btSet = 11;
 const int btnNightM = 12;
 const int btAlarm = 13;
+const int btnSnooze = A1; 
 const int buzzer = 9; 
 const int isbacklight = 8; 
 const int npnBase = 8; 
 
 
 // LEDs pins
-const int led1 = A0;
-const int led2 = A1;
-const int led3 = A2;
+const int ledAlarm = A0;
+
 
 
 // Variables
@@ -81,6 +103,8 @@ int tempReading;
 unsigned long starttime;
 float temperature;
 float humidity;
+int snoozeMinutes = 10; // Default snooze time is 10 minutes
+
 
 
 // Boolean flags
@@ -89,6 +113,12 @@ boolean alarmON = false;
 boolean turnItOn = false;
 boolean backlightON = true;
 bool isSettingDateTime = false; 
+bool displayTemperature = true;  // Flag to toggle display
+unsigned long lastToggleTime = 0;
+const unsigned long toggleInterval = 15000; // 10 seconds
+bool snoozeActive = false;
+bool alarmWasSnoozed = false;  
+
 
 void setup() {
   initDS3231();
@@ -97,8 +127,12 @@ void setup() {
   initLeds();
   initBuzz();
   initDTH22();
+  initAlarmTime();
+  initSnooze();
   Serial.begin(9600);
   delay(100);
+}
+void initAlarmTime() { 
   AH = EEPROM.read(0);
   AM = EEPROM.read(1);
   if (AH > 23) {
@@ -107,24 +141,38 @@ void setup() {
   if (AM > 59) {
     AM = 0;
   }
-}
+  }
+void initSnooze() { 
+    snoozeMinutes = EEPROM.read(2); // Read the snooze time from EEPROM
+  if (AH > 23) {
+    AH = 0;
+  }
+  if (AM > 59) {
+    AM = 0;
+  }
+  if (snoozeMinutes > 59) {
+    snoozeMinutes = 10; // Default to 10 minutes if invalid value
+  }
+  }
 void initLeds() { 
-  pinMode(led1, OUTPUT);
-  pinMode(led2, OUTPUT);
-  pinMode(led3, OUTPUT);
+  pinMode(ledAlarm, OUTPUT);
   }
 void initBTNs() { 
   pinMode(btSet, INPUT_PULLUP);
   pinMode(btnNightM, INPUT_PULLUP);
   pinMode(btAlarm, INPUT_PULLUP);
   pinMode(btAlarmSet, INPUT_PULLUP); 
+  pinMode(btnSnooze, INPUT_PULLUP);
   }
 void initLCD() { 
   lcd.begin(16, 2);
   lcd.createChar(1, clocksymbol);
   lcd.createChar(2, temp);
+  lcd.createChar(3, percent);
+  lcd.createChar(4, snooze);
   digitalWrite(isbacklight, HIGH);
-  }
+}
+
 void initDS3231() { 
   rtc.begin();
   }
@@ -137,6 +185,14 @@ void initBuzz() {
 void loop() {
   readBtns();       // Read buttons
   getTimeDate();    // Read time and date from RTC
+
+  unsigned long currentMillis = millis();
+  // Toggle the display between temperature and humidity every 10 seconds
+  if (currentMillis - lastToggleTime >= toggleInterval) {
+    displayTemperature = !displayTemperature;
+    lastToggleTime = currentMillis;
+  }
+
   if (!setupScreen) {
     lcdPrint();     // Normally print the current time/date/alarm to the LCD
     if (alarmON) {
@@ -150,19 +206,11 @@ void loop() {
   }
 
   // Read and print temperature and humidity values every minute
-  unsigned long currentMillis = millis();
   if (currentMillis - starttime >= 1500) { 
     starttime = currentMillis;  // Reset the timer
     measureTemperature();  // Read temperature
     measureHumidity();     // Read humidity
-    Serial.begin(9600);  // Initialize serial communication
-    Serial.print("Temperature: ");
-    Serial.print(tempC);
-    Serial.println(" °C");
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
-    Serial.println(" %");
-    Serial.end();  // End serial communication
+    
   }
 }
 
@@ -181,15 +229,6 @@ void measureTemperature() {
 void measureHumidity() {
   humidity = dht.readHumidity(); // Get humidity from DHT22
 
-  if (backlightON) {
-    LEDsHum();
-  } else {
-    // Ensure all LEDs are off when backlight is off
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
-    digitalWrite(led3, LOW);
-  }
-
   Serial.begin(9600);  // Initialize serial communication
   Serial.print("Humidity: ");
   Serial.print(humidity);
@@ -197,56 +236,6 @@ void measureHumidity() {
   Serial.end();  // End serial communication
 }
 
-// LEDs Humidity
-void LEDsHum() {
-  if (humidity < 30) {
-     digitalWrite(led2, LOW);
-    digitalWrite(led3, LOW);
-    digitalWrite(led1, LOW);
-    delay(200);
-    digitalWrite(led1, HIGH);
-    delay(200);
-    digitalWrite(led1, LOW);
-    delay(200);
-    digitalWrite(led1, HIGH);
-    
-  } else if (humidity >= 30 && humidity < 35) {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, LOW);
-    digitalWrite(led3, LOW);
-  } else if (humidity >= 35 && humidity < 40) {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, LOW);
-  } else if (humidity >= 40 && humidity < 45) {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, LOW);
-  } else if (humidity >= 45 && humidity < 50) {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, HIGH);
-  } else if (humidity >= 50 && humidity < 55) {
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
-    digitalWrite(led3, HIGH);
-  } else if (humidity >= 55 && humidity < 60) {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, HIGH);
-  } else {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, LOW);
-    delay(200);
-    digitalWrite(led3, HIGH);
-    delay(200);
-    digitalWrite(led3, LOW);
-    delay(200);
-    digitalWrite(led3, HIGH);
-    
-  }
-}
 
 // BUTTONS
 // Read buttons state
@@ -257,12 +246,26 @@ void readBtns() {
     btnsAlarm();
   }
   alarmToggle();
+  btnprevious();
 }
+void btnprevious () {
+// Handle the btnSnooze button to move back to a previous value
+  if (digitalRead(btnSnooze) == LOW) {
+    if (btnCount != 6) {  // Add this condition to prevent decrementing when btnCount is 6
+      btnCount--; // Decrement the counter to move back to the previous value
+      delay(300); // Add a small delay to avoid false positives
+    }
+  }
+}
+
 // Time & Date
 void btnsDatetime() {
   set_state = digitalRead(btSet);
   adjust_state = digitalRead(btnNightM);
   alarm_state = digitalRead(btAlarm);
+
+  
+
   
   if (set_state == LOW) {
     if (!setupScreen) {
@@ -273,7 +276,7 @@ void btnsDatetime() {
       lcd.print("Set up");
       lcd.setCursor(4, 1);
       lcd.print("DATETIME");
-      delay(950);
+      delay(1000);
       lcd.clear();
       btnCount = 1; 
       lcd.clear();
@@ -303,16 +306,15 @@ void btnsAlarm() {
   alarm_state = digitalRead(btAlarm);
   alarm_set_state = digitalRead(btAlarmSet);
 
-  
   if (alarm_set_state == LOW) {
     if (!setupScreen) {
       setupScreen = true;
       lcd.clear();
       lcd.setCursor(5, 0);
       lcd.print("Set up");
-      lcd.setCursor(3, 1);
-      lcd.print("ALARM Time");
-      delay(950);
+      lcd.setCursor(0, 1);
+      lcd.print("ALARM and SNOOZE");
+      delay(1000);
       btnCount = 6; 
       lcd.clear();
       delay(200);
@@ -322,6 +324,7 @@ void btnsAlarm() {
       rtc.adjust(DateTime(YY, MM, DD, H, M, now.second())); 
       EEPROM.write(0, AH);  
       EEPROM.write(1, AM);  
+      EEPROM.write(2, snoozeMinutes); // Save the snooze time to EEPROM
       lcd.print("   Saving....");
       delay(800);
       lcd.clear();
@@ -331,6 +334,7 @@ void btnsAlarm() {
     delay(500);
   }
 }
+
 void btnsNightMode() {
   adjust_state = digitalRead(btnNightM);
   
@@ -339,13 +343,11 @@ void btnsNightMode() {
       if (backlightON) {
         backlightON = false;
         digitalWrite(isbacklight, LOW);
-        digitalWrite(led1, LOW);
-        digitalWrite(led2, LOW);
-        digitalWrite(led3, LOW);
+        digitalWrite(ledAlarm, LOW);
       } else {
         backlightON = true;
         digitalWrite(isbacklight, HIGH);
-        LEDsHum();
+        digitalWrite(ledAlarm, HIGH);
       }
       delay(500);
     }
@@ -353,19 +355,24 @@ void btnsNightMode() {
 }
 void alarmToggle() {
   alarm_state = digitalRead(btAlarm);
-  
+
   if (!setupScreen) {
-      if (alarm_state == LOW) {
-       if (alarmON) {
-         alarm = "     ";
-         alarmON = false;
-         }  else {
-         alarmON = true;
+    if (alarm_state == LOW) {
+      if (alarmON) {
+        alarm = "     ";
+        alarmON = false;
+        turnItOn = false;  // Make sure the alarm is turned off
+        digitalWrite(ledAlarm, LOW); // Turn off the alarm LED
+      } else {
+        if (!alarmWasSnoozed) {  // If the alarm is currently off and not snoozed, turn it on
+          alarmON = true;
+          digitalWrite(ledAlarm, HIGH); // Turn on the alarm LED
         }
-        delay(500);
       }
-     }
+      delay(500);
     }
+  }
+}
 
 
 // Read time and date from DS3231 RTC
@@ -379,7 +386,7 @@ void getTimeDate() {
     M = now.minute();
     S = now.second();
   }
-  // Make some fixes...
+  
   if (DD < 10) {
     sDD = '0' + String(DD);
   } else {
@@ -420,30 +427,51 @@ void getTimeDate() {
 
 // LCD Print values to the display
 void lcdPrint() {
-  // Convert the temperature to a formatted string with one decimal place
-  char tempStr[6]; // A string of 6 characters should be sufficient to format the temperature
-  dtostrf(tempC, 4, 1, tempStr); // Convert the float value tempC to a string with one decimal place
-  
-  String line1 = sH + ":" + sM + ":" + sS + " |";
-  lcd.setCursor(0, 0); // First line
-  lcd.print(line1);
-  if (alarmON) {
-    lcd.setCursor(10, 0);
-    lcd.write(1);
-  }
-  String line2 = aH + ":" + aM;
-  lcd.setCursor(11, 0);
-  lcd.print(line2);
+  if (!turnItOn) { // Controllo se il buzzer è attivo
+    // Converti la temperatura in una stringa formattata con una cifra decimale
+    char tempStr[6]; // Una stringa di 6 caratteri dovrebbe essere sufficiente per formattare la temperatura
+    dtostrf(tempC, 4, 1, tempStr); // Converti il valore float tempC in una stringa con una cifra decimale
 
-  String line3 = sDD + "-" + sMM + "-" + sYY + " | " + tempStr; // Use the formatted string for the temperature
-  lcd.setCursor(0, 1); // Second line
-  lcd.print(line3);
-  if (setupScreen) {
-    lcd.setCursor(13, 1);
-    lcd.print("");
+    // Converti l'umidità in una stringa formattata con una cifra decimale
+    char humStr[6];
+    dtostrf(humidity, 4, 1, humStr);
+
+    String line1 = sH + ":" + sM + ":" + sS + " |";
+    lcd.setCursor(0, 0); // Prima riga
+    lcd.print(line1);
+    if (alarmON) {
+      lcd.setCursor(10, 0);
+      lcd.write(1);
+    }
+    String line2;
+    if (displayTemperature) {
+      line2 = sDD + "-" + sMM + "-" + sYY + " | " + tempStr;
+      lcd.setCursor(15, 1); // Posizione per il simbolo della temperatura
+      lcd.write(2); // Simbolo della temperatura
+    } else {
+      line2 = sDD + "-" + sMM + "-" + sYY + " | " + humStr;
+      lcd.setCursor(15, 1); // Posizione per il simbolo del percentuale
+      lcd.write(3); // Simbolo del percentuale
+    }
+    lcd.setCursor(0, 1); // Seconda riga
+    lcd.print(line2);
   } else {
-    lcd.setCursor(15, 1);
-    lcd.write(2);
+    // Messaggio quando il buzzer è attivo
+    lcd.setCursor(0, 0);
+    lcd.print(" Wake up buddy, ");
+    lcd.setCursor(0, 1);
+    lcd.print("u start to smell");
+  }
+
+  // Stampa l'orario dell'allarme solo se il buzzer non è attivo e la funzione snooze non è attiva
+  if ((!alarmON || digitalRead(btnSnooze) == LOW) && !snoozeActive && !turnItOn) {
+    String alarmTime = aH + ":" + aM;
+    lcd.setCursor(11, 0);
+    lcd.print(alarmTime);
+  } else if (digitalRead(btnSnooze) == LOW) {
+    String alarmTime = aH + ":" + aM;
+    lcd.setCursor(11, 0);
+    lcd.print(alarmTime);
   }
 }
 
@@ -455,7 +483,16 @@ void timeSetup() {
   int down_state = alarm_state;
   if (btnCount <= 5) {
     if (btnCount == 1) { // Set Hour
-      lcd.setCursor(4, 0);      lcd.print(">");
+       lcd.setCursor(4, 0);
+      lcd.print(">");
+      lcd.setCursor(9, 0);
+      lcd.print(" ");
+      lcd.setCursor(1, 1);
+      lcd.print(" ");
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       if (up_state == LOW) { // Up button +
         if (H < 23) {
           H++;
@@ -473,10 +510,16 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 2) { // Set Minutes
-      lcd.setCursor(4, 0);
+     lcd.setCursor(4, 0);
       lcd.print(" ");
       lcd.setCursor(9, 0);
       lcd.print(">");
+      lcd.setCursor(1, 1);
+      lcd.print(" ");
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       if (up_state == LOW) {
         if (M < 59) {
           M++;
@@ -494,10 +537,16 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 3) { // Set Day
+      lcd.setCursor(4, 0);
+      lcd.print(" ");
       lcd.setCursor(9, 0);
       lcd.print(" ");
       lcd.setCursor(1, 1);
       lcd.print(">");
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       
       if (up_state == LOW) {
         if (DD < 31) {
@@ -516,11 +565,16 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 4) { // Set Month
+      lcd.setCursor(4, 0);
+      lcd.print(" ");
+      lcd.setCursor(9, 0);
+      lcd.print(" ");
       lcd.setCursor(1, 1);
       lcd.print(" ");
       lcd.setCursor(6, 1);
       lcd.print(">");
-      
+      lcd.setCursor(11, 1);
+      lcd.print(" ");
       if (up_state == LOW) {
         if (MM < 12) {
           MM++;
@@ -538,6 +592,12 @@ void timeSetup() {
         delay(350);
       }
     } else if (btnCount == 5) { // Set Year
+      lcd.setCursor(4, 0);
+      lcd.print(" ");
+      lcd.setCursor(9, 0);
+      lcd.print(" ");
+      lcd.setCursor(1, 1);
+      lcd.print(" ");
       lcd.setCursor(6, 1);
       lcd.print(" ");
       lcd.setCursor(11, 1);
@@ -587,19 +647,30 @@ void setAlarmTime() {
   int up_state = adjust_state;
   int down_state = alarm_state;
 
-  
-  lcd.setCursor(0, 0);
-  lcd.write(1); //Clocksymbol
-
- 
-  lcd.setCursor(1, 0);
-  lcd.print("Set your Alarm:");
-
-  lcd.setCursor(15, 0);
-  lcd.write(1); //Clocksymbol
   String line2;
 
-  if (btnCount == 6) { // Set alarm Hour
+  // Set the message for the alarm setup
+  if (btnCount == 6 || btnCount == 7) {
+    lcd.setCursor(1, 0);
+    lcd.write(1); // Clock symbol
+    lcd.setCursor(3, 0);
+    lcd.print("Set  Alarm");
+    lcd.setCursor(14, 0);
+    lcd.write(1); // Clock symbol
+  }
+
+  // Set the message for the snooze setup
+  if (btnCount == 8) {
+    lcd.setCursor(1, 0);
+    lcd.write(4); // Snooze symbol
+    lcd.setCursor(3, 0);
+    lcd.print("Set Snooze");
+    lcd.setCursor(14, 0);
+    lcd.write(4); // Snooze symbol
+  }
+
+  // Adjust alarm hour
+  if (btnCount == 6) {
     if (up_state == LOW) {
       if (AH < 23) {
         AH++;
@@ -616,8 +687,10 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "    >" + aH + " : " + aM + "    ";
-  } else if (btnCount == 7) { // Set alarm Minutes
+    line2 = "    >" + String(AH) + " : " + (AM < 10 ? "0" + String(AM) : String(AM)) + "    ";
+  }
+  // Adjust alarm minutes
+  else if (btnCount == 7) {
     if (up_state == LOW) {
       if (AM < 59) {
         AM++;
@@ -634,7 +707,27 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "     " + aH + " :" + ">" + aM + " ";
+    line2 = "     " + String(AH) + " :>" + (AM < 10 ? "0" + String(AM) : String(AM)) + " "; // Formatta i minuti con due cifre
+  }
+  // Adjust snooze minutes
+  else if (btnCount == 8) {
+    if (up_state == LOW) {
+      if (snoozeMinutes < 59) {
+        snoozeMinutes++;
+      } else {
+        snoozeMinutes = 0;
+      }
+      delay(350);
+    }
+    if (down_state == LOW) {
+      if (snoozeMinutes > 0) {
+        snoozeMinutes--;
+      } else {
+        snoozeMinutes = 59;
+      }
+      delay(350);
+    }
+    line2 = "    >" + (snoozeMinutes < 10 ? "0" + String(snoozeMinutes) : String(snoozeMinutes)) + " min.";
   }
 
   lcd.setCursor(0, 1);
@@ -643,16 +736,21 @@ void setAlarmTime() {
   if (set_state == LOW && btnCount == 6) {
     btnCount = 7; // Move to setting minutes after setting hours
     delay(200);
+  } else if (set_state == LOW && btnCount == 7) {
+    btnCount = 8; // Move to setting snooze minutes after setting alarm minutes
+    delay(200);
   }
 }
+
 
 
 // ALARM TOGGLE
 void callAlarm() {
   static unsigned long lastMillis = 0;
   static bool beepState = false;
+  static unsigned long snoozeStartTime = 0;
 
-  if (aH == sH && aM == sM) {
+  if (aH == sH && aM == sM && !snoozeActive) {
     turnItOn = true;
   }
 
@@ -664,11 +762,30 @@ void callAlarm() {
       noTone(buzzer);
       beepState = false;
       lastMillis = currentMillis;
+      digitalWrite(ledAlarm, LOW); // LED off when buzzer is off
     } else if (!beepState && (currentMillis - lastMillis >= 200)) { // Pause duration in ms
       tone(buzzer, 1000); // Emit beep sound
       beepState = true;
       lastMillis = currentMillis;
+      digitalWrite(ledAlarm, HIGH); // LED on when buzzer is on
     }
+
+    // Check if snooze button is pressed
+    if (digitalRead(btnSnooze) == LOW) {
+      noTone(buzzer);
+      turnItOn = false;
+      snoozeActive = true;
+      alarmWasSnoozed = true;  // Set flag snooze
+      snoozeStartTime = currentMillis;
+      digitalWrite(ledAlarm, LOW); // LED off when SNOOZE on
+    }
+  }
+
+  // Handle snooze functionality
+  if (snoozeActive && millis() - snoozeStartTime >= (snoozeMinutes * 60000)) { // Snooze time
+    snoozeActive = false;
+    turnItOn = true;
+    digitalWrite(ledAlarm, HIGH); // Turn on LED when snooze time is finished
   }
 
   // Turn off the buzzer and reset states when the alarm button is pressed
@@ -676,9 +793,10 @@ void callAlarm() {
     noTone(buzzer);
     turnItOn = false;
     beepState = false;
+    snoozeActive = false;
     lastMillis = 0;
+    alarmWasSnoozed = false;  // Reset flag snooze
+    digitalWrite(ledAlarm, LOW); // LED off when turn off manually the buzzer
   }
 }
-
-
 
