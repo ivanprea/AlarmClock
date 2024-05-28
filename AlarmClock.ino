@@ -206,7 +206,7 @@ void loop() {
   }
 
   // Read and print temperature and humidity values every minute
-  if (currentMillis - starttime >= 1500) { 
+  if (currentMillis - starttime >= 120000) { 
     starttime = currentMillis;  // Reset the timer
     measureTemperature();  // Read temperature
     measureHumidity();     // Read humidity
