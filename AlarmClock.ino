@@ -205,7 +205,7 @@ void loop() {
     timeSetup();  // If button set is pressed then call the time setup function
   }
 
-  // Read and print temperature and humidity values every minute
+  // Read and print temperature and humidity values every 2min
   if (currentMillis - starttime >= 120000) { 
     starttime = currentMillis;  // Reset the timer
     measureTemperature();  // Read temperature
