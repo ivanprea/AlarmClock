@@ -97,7 +97,7 @@ This code sets up an Arduino-based alarm clock inspired by an Elegoo project (ht
 
 
 ## How it works:
-The primary function of the display is to provide essential information such as the current time, date, alarm hour, and temperature/humidity readings, with updates occurring every 10 seconds. The status of the alarm (ON/OFF) is visually indicated by a bell icon located to its left.
+The primary function of the display is to provide essential information such as the current time, date, alarm hour, and temperature/humidity readings. The status of the alarm (ON/OFF) is visually indicated by a bell icon located to its left and the LED ON.
 
 Here's how the buttons operate:
 
