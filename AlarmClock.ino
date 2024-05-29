@@ -427,17 +427,17 @@ void getTimeDate() {
 
 // LCD Print values to the display
 void lcdPrint() {
-  if (!turnItOn) { // Controllo se il buzzer è attivo
-    // Converti la temperatura in una stringa formattata con una cifra decimale
-    char tempStr[6]; // Una stringa di 6 caratteri dovrebbe essere sufficiente per formattare la temperatura
-    dtostrf(tempC, 4, 1, tempStr); // Converti il valore float tempC in una stringa con una cifra decimale
+  if (!turnItOn) { // Check if buzzer is ON
 
-    // Converti l'umidità in una stringa formattata con una cifra decimale
+    char tempStr[6]; 
+    dtostrf(tempC, 4, 1, tempStr); // Convert temps in decimal value
+
+    // Convert humidity in decimal value
     char humStr[6];
     dtostrf(humidity, 4, 1, humStr);
 
     String line1 = sH + ":" + sM + ":" + sS + " |";
-    lcd.setCursor(0, 0); // Prima riga
+    lcd.setCursor(0, 0);
     lcd.print(line1);
     if (alarmON) {
       lcd.setCursor(10, 0);
@@ -446,17 +446,17 @@ void lcdPrint() {
     String line2;
     if (displayTemperature) {
       line2 = sDD + "-" + sMM + "-" + sYY + " | " + tempStr;
-      lcd.setCursor(15, 1); // Posizione per il simbolo della temperatura
-      lcd.write(2); // Simbolo della temperatura
+      lcd.setCursor(15, 1); 
+      lcd.write(2); 
     } else {
       line2 = sDD + "-" + sMM + "-" + sYY + " | " + humStr;
-      lcd.setCursor(15, 1); // Posizione per il simbolo del percentuale
-      lcd.write(3); // Simbolo del percentuale
+      lcd.setCursor(15, 1); 
+      lcd.write(3); 
     }
-    lcd.setCursor(0, 1); // Seconda riga
+    lcd.setCursor(0, 1); 
     lcd.print(line2);
   } else {
-    // Messaggio quando il buzzer è attivo
+    // Display a mesasge when the buzzer is active
     lcd.setCursor(0, 0);
     lcd.print(" Wake up buddy, ");
     lcd.setCursor(0, 1);
@@ -702,7 +702,7 @@ void setAlarmTime() {
       }
       delay(350);
     }
-    line2 = "     " + (AH < 10 ? "0" + String(AH) : String(AH)) + " :>" + (AM < 10 ? "0" + String(AM) : String(AM)) + " "; // Formatta i minuti con due cifre
+    line2 = "     " + (AH < 10 ? "0" + String(AH) : String(AH)) + " :>" + (AM < 10 ? "0" + String(AM) : String(AM)) + " "; 
   }
   // Adjust snooze minutes
   else if (btnCount == 8) {
