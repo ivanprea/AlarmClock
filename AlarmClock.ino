@@ -262,9 +262,7 @@ void btnsDatetime() {
   set_state = digitalRead(btSet);
   adjust_state = digitalRead(btnNightM);
   alarm_state = digitalRead(btAlarm);
-
-  
-
+  alarm_set_state = digitalRead(btAlarmSet);
   
   if (set_state == LOW) {
     if (!setupScreen) {
@@ -281,23 +279,27 @@ void btnsDatetime() {
       lcd.clear();
       delay(200);
     } else {
-      if (btnCount <= 5) {
+      if (btnCount < 5) {
         btnCount++;
         delay(300);
-        if (btnCount == 6) {
-          lcd.clear();
-          rtc.adjust(DateTime(YY, MM, DD, H, M, 0));
-          lcd.print("   Saving....");
-          delay(800);
-          lcd.clear();
-          setupScreen = false;
-          isSettingDateTime = false; 
-          btnCount = 0;
-        }
       }
     }
   }
+  
+  // Controlla se si sta impostando la data e l'ora e il pulsante di impostazione dell'allarme è premuto
+  if (isSettingDateTime && alarm_set_state == LOW) {
+    lcd.clear();
+    rtc.adjust(DateTime(YY, MM, DD, H, M, 0));
+    lcd.print("   Saving....");
+    delay(800);
+    lcd.clear();
+    setupScreen = false;
+    isSettingDateTime = false; 
+    btnCount = 0;
+  }
 }
+
+
 void btnsAlarm() {
   if (isSettingDateTime) return; 
   
