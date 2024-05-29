@@ -214,7 +214,6 @@ void loop() {
   }
 }
 
-
 /*************** Functions ****************/
 void measureTemperature() {
   temperature = rtc.getTemperature(); // Get temperature from DS3231
