@@ -117,7 +117,8 @@ bool displayTemperature = true;  // Flag to toggle display
 unsigned long lastToggleTime = 0;
 const unsigned long toggleInterval = 15000; // 10 seconds
 bool snoozeActive = false;
-bool alarmWasSnoozed = false;  
+bool alarmWasSnoozed = false; 
+ 
 
 
 void setup() {
@@ -258,6 +259,7 @@ void btnprevious () {
 }
 
 // Time & Date
+// Time & Date
 void btnsDatetime() {
   set_state = digitalRead(btSet);
   adjust_state = digitalRead(btnNightM);
@@ -290,15 +292,21 @@ void btnsDatetime() {
   if (isSettingDateTime && alarm_set_state == LOW) {
     lcd.clear();
     rtc.adjust(DateTime(YY, MM, DD, H, M, 0));
-    lcd.print("   Saving....");
-    delay(800);
+    for (int i = 0; i < 4; i++) {
+      lcd.setCursor(0, 0);
+      lcd.print("   Saving");
+      for (int j = 0; j <= i; j++) {
+        lcd.print(".");
+      }
+      delay(500); // Adjust delay to control animation speed
+      lcd.clear();
+    }
     lcd.clear();
     setupScreen = false;
     isSettingDateTime = false; 
     btnCount = 0;
   }
 }
-
 
 void btnsAlarm() {
   if (isSettingDateTime) return; 
@@ -326,8 +334,15 @@ void btnsAlarm() {
       EEPROM.write(0, AH);  
       EEPROM.write(1, AM);  
       EEPROM.write(2, snoozeMinutes); // Save the snooze time to EEPROM
-      lcd.print("   Saving....");
-      delay(800);
+      for (int i = 0; i < 4; i++) {
+        lcd.setCursor(0, 0);
+        lcd.print("   Saving");
+        for (int j = 0; j <= i; j++) {
+          lcd.print(".");
+        }
+        delay(500); // Adjust delay to control animation speed
+        lcd.clear();
+      }
       lcd.clear();
       setupScreen = false;
       btnCount = 0;
