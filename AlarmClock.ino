@@ -463,16 +463,11 @@ void lcdPrint() {
     lcd.print("u start to smell");
   }
 
-  // Stampa l'orario dell'allarme solo se il buzzer non è attivo e la funzione snooze non è attiva
-  if ((!alarmON || digitalRead(btnSnooze) == LOW) && !snoozeActive && !turnItOn) {
+ 
     String alarmTime = aH + ":" + aM;
     lcd.setCursor(11, 0);
     lcd.print(alarmTime);
-  } else if (digitalRead(btnSnooze) == LOW) {
-    String alarmTime = aH + ":" + aM;
-    lcd.setCursor(11, 0);
-    lcd.print(alarmTime);
-  }
+  
 }
 
 
