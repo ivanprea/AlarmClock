@@ -101,15 +101,15 @@ The primary function of the display is to provide essential information such as 
 
 Here's how the buttons operate:
 
-Alarm Button (btAlarm): Toggles the alarm function on and off. During datetime setup or alarm/snooze configuration, pressing this button decreases the selected value.
+- Alarm Button (btAlarm): Toggles the alarm function on and off. During datetime setup or alarm/snooze configuration, pressing this button decreases the selected value.
 
-Night Mode Button (btnNightM): Controls the backlight of the LCD display and the state of the LED (which still blinks when the buzzer is active). In setup modes, pressing this button increases the selected value.
+- Night Mode Button (btnNightM): Controls the backlight of the LCD display and the state of the LED (which still blinks when the buzzer is active). In setup modes, pressing this button increases the selected value.
 
-Snooze Button (btnSnooze): Initiates the snooze function, turning off the LED. During Datetime or Alarm/Snooze setup, pressing it selects the previous value.
+- Snooze Button (btnSnooze): Initiates the snooze function, turning off the LED. During Datetime or Alarm/Snooze setup, pressing it selects the previous value.
 
-Set Button (btSet): Opens the Datetime setup. Allows the user to progress to the next value. Upon reaching the year value, pressing it again saves and exits. After saving, the clock seconds reset to 00.
+- Set Button (btSet): Opens the Datetime setup. Allows the user to progress to the next value. Upon reaching the year value, pressing it again saves and exits. After saving, the clock seconds reset to 00.
 
-Alarm Set (btAlarmSet): Opens the Alarm and Snooze setup mode. Pressing it again directly saves the settings. The clock seconds do not reset to 00 in this mode. To reach the Snooze setup after reaching the minute of the alarm , press the Set Button. 
+- Alarm Set (btAlarmSet): Opens the Alarm and Snooze setup mode. Pressing it again directly saves the settings. The clock seconds do not reset to 00 in this mode. To reach the Snooze setup after reaching the minute of the alarm , press the Set Button. 
 
 The LED indicator illuminates when the alarm state is ON, as indicated by the bell icon next to the alarm hour. It blinks when the buzzer is active. Although the LED can be turned OFF using the Night Mode button, it will still blink when the buzzer is active.
 When the buzzer is active, a custom message will be displayed on the screen until the alarm is turned off or snoozed.
