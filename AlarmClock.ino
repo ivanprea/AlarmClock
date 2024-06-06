@@ -363,12 +363,17 @@ void btnsNightMode() {
       } else {
         backlightON = true;
         digitalWrite(isbacklight, HIGH);
-        digitalWrite(ledAlarm, HIGH);
+        if (alarmON) {
+          digitalWrite(ledAlarm, HIGH);
+        } else {
+          digitalWrite(ledAlarm, LOW);
+        }
       }
       delay(500);
     }
   }
 }
+
 void alarmToggle() {
   alarm_state = digitalRead(btAlarm);
 
