@@ -382,12 +382,15 @@ void alarmToggle() {
       if (alarmON) {
         alarm = "     ";
         alarmON = false;
-        turnItOn = false;  // Make sure the alarm is turned off
-        digitalWrite(ledAlarm, LOW); // Turn off the alarm LED
+        turnItOn = false;  
+        digitalWrite(ledAlarm, LOW); 
       } else {
-        if (!alarmWasSnoozed) {  // If the alarm is currently off and not snoozed, turn it on
+        if (!alarmWasSnoozed) {  
           alarmON = true;
-          digitalWrite(ledAlarm, HIGH); // Turn on the alarm LED
+      
+          if (backlightON) {
+            digitalWrite(ledAlarm, HIGH); 
+          }
         }
       }
       delay(500);
